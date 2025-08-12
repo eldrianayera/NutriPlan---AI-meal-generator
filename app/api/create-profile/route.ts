@@ -45,6 +45,7 @@ export async function POST() {
       { status: 201 }
     );
   } catch (error) {
+    console.error("Create profile error:", error);
     return NextResponse.json({ error: "Internal error." }, { status: 500 });
   }
 }
