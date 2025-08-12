@@ -16,9 +16,11 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body>
+        <body className="bg-gray-50 text-gray-900">
           <Navbar />
-          {children}
+          <main className="max-w-7xl mx-auto pt-16 p-4 min-h-screen">
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>
