@@ -26,14 +26,19 @@ export default function ProfilePage() {
   } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
+      console.log("Fetching subscription status...");
       const res = await fetch("/api/profile/subscription-status");
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to fetch subscription.");
       }
-      return res.json();
+      const resp = await res.json();
+      console.log("this is the resp", resp);
+
+      return resp;
     },
-    enabled: isLoaded && isSignedIn,
+    enabled: true,
+
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -170,7 +175,7 @@ export default function ProfilePage() {
           {/* Right Panel: Subscription Details */}
           <div className="w-full md:w-2/3 p-6 bg-gray-50">
             <h2 className="text-2xl font-bold mb-6 text-emerald-700">
-              Subscription Details
+              Subscription Detailsssss
             </h2>
 
             {isLoading ? (
