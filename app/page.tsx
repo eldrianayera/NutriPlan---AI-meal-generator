@@ -16,7 +16,7 @@ export default function HomePage() {
           Let our AI do the planning. You focus on cooking and enjoying!
         </p>
         <Link
-          href="/sign-up"
+          href="/mealplan"
           className="inline-block bg-white text-emerald-500 font-medium px-5 py-3 rounded hover:bg-gray-100 transition-colors"
         >
           Get Started
