@@ -28,23 +28,17 @@ export default function ProfilePage() {
     queryFn: async () => {
       console.log("Fetching subscription status...");
       const res = await fetch("/api/profile/subscription-status");
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to fetch subscription.");
-      }
-      const resp = await res.json();
-      console.log("this is the resp", resp);
-
-      return resp;
+      console.log("Response status:", res.status);
+      const text = await res.text();
+      console.log("Raw response text:", text);
+      return JSON.parse(text);
     },
-    enabled: true,
-
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: true, // Make sure it always runs
   });
 
   // Adjusted Matching Logic Using priceId
   const currentPlan = availablePlans.find(
-    (plan) => plan.interval === subscription?.subscription?.subscription_tier
+    (plan) => plan.interval === subscription?.subscription?.subscriptionTier
   );
 
   // Mutation: Change Subscription Plan
@@ -175,7 +169,7 @@ export default function ProfilePage() {
           {/* Right Panel: Subscription Details */}
           <div className="w-full md:w-2/3 p-6 bg-gray-50">
             <h2 className="text-2xl font-bold mb-6 text-emerald-700">
-              Subscription Detailsssss
+              Subscription Details
             </h2>
 
             {isLoading ? (
@@ -202,7 +196,7 @@ export default function ProfilePage() {
                       </p>
                       <p>
                         <strong>Status:</strong>{" "}
-                        {subscription.subscription.subscription_active
+                        {subscription.subscription.subscriptionActive
                           ? "ACTIVE"
                           : "INACTIVE"}
                       </p>
