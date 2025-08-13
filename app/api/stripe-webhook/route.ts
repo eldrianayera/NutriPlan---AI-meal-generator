@@ -74,6 +74,7 @@ const handleCheckoutSessionCompleted = async (
     return;
   }
 
+  console.log("HHHHEHHEHE");
   // Update Prisma with subscription details
   try {
     await prisma.profile.update({
@@ -92,7 +93,7 @@ const handleCheckoutSessionCompleted = async (
 
 // Handler for failed invoice payments
 const handleInvoicePaymentFailed = async (invoice: Stripe.Invoice) => {
-  const subscriptionId = (invoice as any).subscription as string | undefined;
+  const subscriptionId = (invoice as any).subscription as string;
   console.log(
     "Handling invoice.payment_failed for subscription:",
     subscriptionId
@@ -170,7 +171,6 @@ const handleSubscriptionDeleted = async (subscription: Stripe.Subscription) => {
       data: {
         subscriptionActive: false,
         stripeSubscriptionId: null,
-        subscriptionTier: null,
       },
     });
     console.log(`Subscription canceled for user: ${userId}`);

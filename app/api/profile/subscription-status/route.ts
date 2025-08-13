@@ -19,8 +19,6 @@ export async function GET() {
       return NextResponse.json({ subscription: null });
     }
 
-    console.log(profile);
-
     return NextResponse.json({ subscription: profile });
   } catch (error: any) {
     console.error("Error fetching subscription:", error);

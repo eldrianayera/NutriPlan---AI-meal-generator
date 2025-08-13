@@ -1,98 +1,72 @@
-import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
+import { currentUser } from "@clerk/nextjs/server";
+import { getPriceIdFromType } from "@/lib/plans";
 
-const openAI = new OpenAI({
-  apiKey: process.env.OPEN_ROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { dietType, calories, allergies, cuisine, snacks } =
-      await request.json();
+    const clerkUser = await currentUser();
+    if (!clerkUser?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const prompt = `
-      You are a professional nutritionist. Create a 7-day meal plan for an individual following a ${dietType} diet aiming for ${calories} calories per day.
-      
-      Allergies or restrictions: ${allergies || "none"}.
-      Preferred cuisine: ${cuisine || "no preference"}.
-      Snacks included: ${snacks ? "yes" : "no"}.
-      
-      For each day, provide:
-        - Breakfast
-        - Lunch
-        - Dinner
-        ${snacks ? "- Snacks" : ""}
-      
-      Use simple ingredients and provide brief instructions. Include approximate calorie counts for each meal.
-      
-      Structure the response as a JSON object where each day is a key, and each meal (breakfast, lunch, dinner, snacks) is a sub-key. Example:
-      
+    const { newPlan } = await request.json();
+    if (!newPlan) {
+      return NextResponse.json(
+        { error: "New plan is required." },
+        { status: 400 }
+      );
+    }
+
+    // Fetch existing subscription
+    const profile = await prisma.profile.findUnique({
+      where: { userId: clerkUser.id },
+    });
+    if (!profile?.stripeSubscriptionId) {
+      throw new Error("No active subscription found.");
+    }
+
+    const subscriptionId = profile.stripeSubscriptionId;
+
+    // Retrieve the subscription from Stripe
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subscriptionItemId = subscription.items.data[0]?.id;
+    if (!subscriptionItemId) {
+      throw new Error("Subscription item not found.");
+    }
+
+    // Update subscription in Stripe
+    const updatedSubscription = await stripe.subscriptions.update(
+      subscriptionId,
       {
-        "Monday": {
-          "Breakfast": "Oatmeal with fruits - 350 calories",
-          "Lunch": "Grilled chicken salad - 500 calories",
-          "Dinner": "Steamed vegetables with quinoa - 600 calories",
-          "Snacks": "Greek yogurt - 150 calories"
-        },
-        "Tuesday": {
-          "Breakfast": "Smoothie bowl - 300 calories",
-          "Lunch": "Turkey sandwich - 450 calories",
-          "Dinner": "Baked salmon with asparagus - 700 calories",
-          "Snacks": "Almonds - 200 calories"
-        }
-        // ...and so on for each day
+        cancel_at_period_end: false,
+        items: [
+          {
+            id: subscriptionItemId,
+            price: getPriceIdFromType(newPlan),
+          },
+        ],
+        proration_behavior: "create_prorations",
       }
+    );
 
-      Return just the json with no extra commentaries and no backticks.
-    `;
-
-    const completion = await openAI.chat.completions.create({
-      model: "meta-llama/llama-3.3-70b-instruct:free",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-
-      temperature: 0.7,
-      max_completion_tokens: 1500,
+    // Update Prisma
+    await prisma.profile.update({
+      where: { userId: clerkUser.id },
+      data: {
+        subscriptionTier: newPlan,
+        stripeSubscriptionId: updatedSubscription.id,
+        subscriptionActive: true,
+      },
     });
 
-    const aiContent = completion.choices[0].message.content!.trim();
-
-    let parsedMealPlan: { [day: string]: DailyMealPlan };
-
-    try {
-      parsedMealPlan = JSON.parse(aiContent);
-    } catch (parseError) {
-      console.error("Error parsing ai response: ", parseError);
-
-      return NextResponse.json(
-        { error: "Failed to parse meal plan." },
-        { status: 500 }
-      );
-    }
-
-    if (typeof parsedMealPlan !== "object" || parsedMealPlan === null) {
-      return NextResponse.json(
-        { error: "Failed to parse meal plan." },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ mealPlan: parsedMealPlan });
-
-    //
+    return NextResponse.json({ subscription: updatedSubscription });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error changing subscription plan:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to change subscription plan." },
+      { status: 500 }
+    );
   }
-}
-
-interface DailyMealPlan {
-  Breakfast?: string;
-  Lunch?: string;
-  Dinner?: string;
-  Snacks?: string;
 }

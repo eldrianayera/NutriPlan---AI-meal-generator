@@ -1,29 +1,36 @@
+// app/subscribe/page.tsx
 "use client";
 
-import { availablePlans } from "@/lib/plans";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { availablePlans, Plan } from "@/lib/plans"; // Adjust the path based on your project structure
+import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast"; // Optional: For better user feedback
 
+// Define the shape of the successful response
 type SubscribeResponse = {
   url: string;
 };
 
+// Define the shape of the error response
 type SubscribeError = {
   error: string;
 };
 
-async function subscribeToPlan(
-  planType: string,
-  userId: string,
-  email: string
-): Promise<SubscribeResponse> {
-  const response = await fetch("/api/checkout", {
+// API call function to subscribe to a plan
+const subscribeToPlan = async ({
+  planType,
+  userId,
+  email,
+}: {
+  planType: string;
+  userId: string;
+  email: string;
+}): Promise<SubscribeResponse> => {
+  const res = await fetch("/api/checkout", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       planType,
       userId,
@@ -31,53 +38,65 @@ async function subscribeToPlan(
     }),
   });
 
-  if (!response.ok) {
-    const errorData: SubscribeError = await response.json();
-    throw new Error(errorData.error || "Something went wrong");
+  if (!res.ok) {
+    const errorData: SubscribeError = await res.json();
+    throw new Error(errorData.error || "Something went wrong.");
   }
 
-  const data: SubscribeResponse = await response.json();
+  const data: SubscribeResponse = await res.json();
   return data;
-}
+};
 
-export default function Subscribe() {
-  const router = useRouter();
-  const { user } = useUser();
+export default function SubscribePage() {
+  const { user } = useUser(); // Access the current user
+  const router = useRouter(); // Next.js router for navigation
+  const queryClient = useQueryClient();
+
   const userId = user?.id;
-  const email = user?.emailAddresses[0].emailAddress || "";
+  const email = user?.emailAddresses?.[0]?.emailAddress || "";
 
-  const { mutate, isPending } = useMutation<
-    SubscribeResponse,
-    Error,
-    { planType: string }
-  >({
+  // React Query's useMutation hook for handling the subscription process
+  const mutation = useMutation<SubscribeResponse, Error, { planType: string }>({
     mutationFn: async ({ planType }) => {
       if (!userId) {
-        throw new Error("User not Signed in");
+        throw new Error("User not signed in.");
       }
 
-      return subscribeToPlan(planType, userId, email);
+      return subscribeToPlan({ planType, userId, email });
+    },
+    onMutate: () => {
+      // Optional: Show a loading toast or similar feedback
+      toast.loading("Processing your subscription...", { id: "subscribe" });
     },
     onSuccess: (data) => {
+      // Update the toast to success
+      toast.success("Redirecting to checkout!", { id: "subscribe" });
+      // Redirect to the Stripe Checkout URL
       window.location.href = data.url;
     },
-    onError: () => {
-      toast.error("Something went wrong !");
+    onError: (error) => {
+      // Update the toast to show an error
+      toast.error(error.message || "Something went wrong.", {
+        id: "subscribe",
+      });
     },
   });
 
+  // Handler for subscribing to a plan
   const handleSubscribe = (planType: string) => {
     if (!userId) {
+      // Redirect to sign-up if the user is not signed in
       router.push("/sign-up");
       return;
     }
 
-    mutate({ planType });
+    // Trigger the mutation
+    mutation.mutate({ planType });
   };
 
   return (
     <div className="px-4 py-8 sm:py-12 lg:py-16">
-      <Toaster />
+      <Toaster position="top-right" /> {/* Optional: For toast notifications */}
       {/* Section Header */}
       <div>
         <h2 className="text-3xl font-bold text-center mt-12 sm:text-5xl tracking-tight">
@@ -149,9 +168,9 @@ export default function Subscribe() {
                   : "bg-emerald-100 text-emerald-700  hover:bg-emerald-200 "
               }  mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium disabled:bg-gray-400 disabled:cursor-not-allowed`}
               onClick={() => handleSubscribe(plan.interval)}
-              disabled={isPending}
+              disabled={mutation.isPending}
             >
-              {isPending ? "Please wait..." : `Subscribe ${plan.name}`}
+              {mutation.isPending ? "Please wait..." : `Subscribe ${plan.name}`}
             </button>
           </div>
         ))}

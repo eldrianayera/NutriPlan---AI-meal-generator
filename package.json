@@ -16,6 +16,7 @@
     "next": "15.4.6",
     "openai": "^5.12.2",
     "react": "19.1.0",
+    "react-calendar": "^6.0.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.5.2",
     "stripe": "^18.4.0"

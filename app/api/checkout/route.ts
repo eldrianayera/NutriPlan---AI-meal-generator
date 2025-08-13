@@ -1,6 +1,6 @@
-import { getPriceIDFromType } from "@/lib/plans";
-import { stripe } from "@/lib/stripe";
 import { NextRequest, NextResponse } from "next/server";
+import { stripe } from "@/lib/stripe";
+import { getPriceIdFromType } from "@/lib/plans";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,40 +8,33 @@ export async function POST(request: NextRequest) {
 
     if (!planType || !userId || !email) {
       return NextResponse.json(
-        {
-          error: "Plan type , user id , and email is required",
-        },
+        { error: "Plan type, User ID, and Email are required." },
         { status: 400 }
       );
     }
 
     const allowedPlanTypes = ["week", "month", "year"];
-
     if (!allowedPlanTypes.includes(planType)) {
       return NextResponse.json(
-        {
-          error: "Invalid plan type",
-        },
+        { error: "Invalid plan type." },
         { status: 400 }
       );
     }
 
-    const priceID = getPriceIDFromType(planType);
-
-    if (!priceID) {
+    const priceId = getPriceIdFromType(planType);
+    if (!priceId) {
       return NextResponse.json(
-        {
-          error: "Invalid price id",
-        },
+        { error: "Price ID for the selected plan not found." },
         { status: 400 }
       );
     }
 
+    // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
-          price: priceID,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -53,9 +46,10 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Checkout API Error:", error.message);
     return NextResponse.json(
-      { error: "Internal Server Error." },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }

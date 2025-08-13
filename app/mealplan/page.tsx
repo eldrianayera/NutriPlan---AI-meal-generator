@@ -256,7 +256,7 @@ export default function MealPlanDashboard() {
             </div>
           ) : mutation.isPending ? (
             <div className="flex justify-center items-center h-full">
-              SPINNER
+              {/* Spinner */}
             </div>
           ) : (
             <p className="text-gray-600">
