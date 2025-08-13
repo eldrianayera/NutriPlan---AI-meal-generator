@@ -1,4 +1,3 @@
-// components/MealPlanDashboard.tsx
 "use client";
 
 import { useState } from "react";
@@ -36,7 +35,6 @@ export default function MealPlanDashboard() {
   const [cuisine, setCuisine] = useState("");
   const [snacks, setSnacks] = useState(false);
 
-  // Initialize the mutation using React Query
   const mutation = useMutation<MealPlanResponse, Error, MealPlanInput>({
     mutationFn: async (payload: MealPlanInput) => {
       const response = await fetch("/api/generate-mealplan", {
@@ -58,20 +56,17 @@ export default function MealPlanDashboard() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const payload: MealPlanInput = {
       dietType,
       calories,
       allergies,
       cuisine,
       snacks,
-      days: 7, // Ensure a weekly plan is generated
+      days: 7,
     };
-
     mutation.mutate(payload);
   };
 
-  // Define the days of the week in order
   const daysOfWeek = [
     "Sunday",
     "Monday",
@@ -82,28 +77,24 @@ export default function MealPlanDashboard() {
     "Saturday",
   ];
 
-  // Function to retrieve the meal plan for a specific day
   const getMealPlanForDay = (day: string): DailyMealPlan | undefined => {
     if (!mutation.data?.mealPlan) return undefined;
-
     return mutation.data.mealPlan[day];
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center  p-4">
-      <div className="w-full max-w-6xl flex flex-col md:flex-row bg-white shadow-lg rounded-lg overflow-hidden">
-        {/* Left Panel: Form */}
-        <div className="w-full md:w-1/3 lg:w-1/4 p-6 bg-emerald-500 text-white">
-          <h1 className="text-2xl font-bold mb-6 text-center">
-            AI Meal Plan Generator
-          </h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Diet Type */}
-            <div>
-              <label
-                htmlFor="dietType"
-                className="block text-sm font-medium mb-1"
-              >
+    <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-6">
+        {/* Form Section - Card */}
+        <div className="w-full lg:w-1/3 bg-primary text-background p-6 rounded-xl shadow-lg">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold">Meal Plan Generator</h1>
+            <p className="mt-2">Create your perfect weekly meal plan</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1">
+              <label htmlFor="dietType" className="block font-medium">
                 Diet Type
               </label>
               <input
@@ -112,56 +103,50 @@ export default function MealPlanDashboard() {
                 value={dietType}
                 onChange={(e) => setDietType(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-emerald-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="e.g., Vegetarian, Keto, Mediterranean"
+                className="w-full p-3 rounded-lg bg-background text-foreground border border-foreground/20"
+                placeholder="Vegetarian, Keto, etc."
               />
             </div>
 
-            {/* Calories */}
-            <div>
-              <label
-                htmlFor="calories"
-                className="block text-sm font-medium mb-1"
-              >
-                Daily Calorie Goal
+            <div className="space-y-1">
+              <label htmlFor="calories" className="block font-medium">
+                Daily Calories
               </label>
-              <input
-                type="number"
-                id="calories"
-                value={calories}
-                onChange={(e) => setCalories(Number(e.target.value))}
-                required
-                min={500}
-                max={5000}
-                className="w-full px-3 py-2 border border-emerald-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="e.g., 2000"
-              />
+              <div className="relative">
+                <input
+                  type="range"
+                  id="calories"
+                  min="500"
+                  max="5000"
+                  step="100"
+                  value={calories}
+                  onChange={(e) => setCalories(Number(e.target.value))}
+                  className="w-full h-2 bg-background rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between mt-2">
+                  <span>500</span>
+                  <span className="font-medium">{calories}</span>
+                  <span>5000</span>
+                </div>
+              </div>
             </div>
 
-            {/* Allergies */}
-            <div>
-              <label
-                htmlFor="allergies"
-                className="block text-sm font-medium mb-1"
-              >
-                Allergies or Restrictions
+            <div className="space-y-1">
+              <label htmlFor="allergies" className="block font-medium">
+                Allergies/Restrictions
               </label>
               <input
                 type="text"
                 id="allergies"
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
-                className="w-full px-3 py-2 border border-emerald-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="e.g., Nuts, Dairy, None"
+                className="w-full p-3 rounded-lg bg-background text-foreground border border-foreground/20"
+                placeholder="Nuts, Dairy, etc."
               />
             </div>
 
-            {/* Preferred Cuisine */}
-            <div>
-              <label
-                htmlFor="cuisine"
-                className="block text-sm font-medium mb-1"
-              >
+            <div className="space-y-1">
+              <label htmlFor="cuisine" className="block font-medium">
                 Preferred Cuisine
               </label>
               <input
@@ -169,100 +154,127 @@ export default function MealPlanDashboard() {
                 id="cuisine"
                 value={cuisine}
                 onChange={(e) => setCuisine(e.target.value)}
-                className="w-full px-3 py-2 border border-emerald-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="e.g., Italian, Chinese, No Preference"
+                className="w-full p-3 rounded-lg bg-background text-foreground border border-foreground/20"
+                placeholder="Italian, Asian, etc."
               />
             </div>
 
-            {/* Snacks */}
             <div className="flex items-center">
               <input
                 type="checkbox"
                 id="snacks"
                 checked={snacks}
                 onChange={(e) => setSnacks(e.target.checked)}
-                className="h-4 w-4 text-emerald-300 border-emerald-300 rounded"
+                className="w-5 h-5 rounded border-foreground/30"
               />
-              <label htmlFor="snacks" className="ml-2 block text-sm text-white">
+              <label htmlFor="snacks" className="ml-3">
                 Include Snacks
               </label>
             </div>
 
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={mutation.isPending}
-                className={`w-full bg-emerald-500 text-white py-2 px-4 rounded-md hover:bg-emerald-600 transition-colors ${
-                  mutation.isPending ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                {mutation.isPending ? "Generating..." : "Generate Meal Plan"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className={`w-full p-3 rounded-lg font-bold bg-background text-primary transition-transform hover:scale-[1.02] ${
+                mutation.isPending ? "opacity-70" : ""
+              }`}
+            >
+              {mutation.isPending ? "Generating..." : "Generate Meal Plan"}
+            </button>
           </form>
 
-          {/* Error Message */}
           {mutation.isError && (
-            <div className="mt-4 p-3 bg-red-200 text-red-800 rounded-md">
-              {mutation.error?.message || "An unexpected error occurred."}
+            <div className="mt-4 p-3 rounded-lg bg-background text-foreground">
+              {mutation.error.message}
             </div>
           )}
         </div>
 
-        {/* Right Panel: Weekly Meal Plan Display */}
-        <div className="w-full md:w-2/3 lg:w-3/4 p-6 bg-gray-50">
-          <h2 className="text-2xl font-bold mb-6 text-emerald-700">
-            Weekly Meal Plan
-          </h2>
+        {/* Results Section - Card */}
+        <div className="w-full lg:w-2/3 bg-background border border-foreground/10 rounded-xl shadow-lg overflow-hidden">
+          <div className="p-6">
+            <h2 className="text-3xl font-bold text-primary mb-6">
+              Your Weekly Plan
+            </h2>
 
-          {mutation.isSuccess && mutation.data.mealPlan ? (
-            <div className="h-[600px] overflow-y-auto">
-              <div className="space-y-6">
+            {mutation.isSuccess && mutation.data.mealPlan ? (
+              <div className="space-y-5">
                 {daysOfWeek.map((day) => {
                   const mealPlan = getMealPlanForDay(day);
                   return (
                     <div
                       key={day}
-                      className="bg-white shadow-md rounded-lg p-4 border border-emerald-200"
+                      className="border border-foreground/10 rounded-lg p-5"
                     >
-                      <h3 className="text-xl font-semibold mb-2 text-emerald-600">
+                      <h3 className="text-xl font-bold text-primary mb-3">
                         {day}
                       </h3>
                       {mealPlan ? (
-                        <div className="space-y-2">
-                          <div>
-                            <strong>Breakfast:</strong> {mealPlan.Breakfast}
-                          </div>
-                          <div>
-                            <strong>Lunch:</strong> {mealPlan.Lunch}
-                          </div>
-                          <div>
-                            <strong>Dinner:</strong> {mealPlan.Dinner}
-                          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {mealPlan.Breakfast && (
+                            <div className="p-3 border border-foreground/10 rounded-lg">
+                              <h4 className="font-medium mb-1">Breakfast</h4>
+                              <p>{mealPlan.Breakfast}</p>
+                            </div>
+                          )}
+                          {mealPlan.Lunch && (
+                            <div className="p-3 border border-foreground/10 rounded-lg">
+                              <h4 className="font-medium mb-1">Lunch</h4>
+                              <p>{mealPlan.Lunch}</p>
+                            </div>
+                          )}
+                          {mealPlan.Dinner && (
+                            <div className="p-3 border border-foreground/10 rounded-lg">
+                              <h4 className="font-medium mb-1">Dinner</h4>
+                              <p>{mealPlan.Dinner}</p>
+                            </div>
+                          )}
                           {mealPlan.Snacks && (
-                            <div>
-                              <strong>Snacks:</strong> {mealPlan.Snacks}
+                            <div className="p-3 border border-foreground/10 rounded-lg">
+                              <h4 className="font-medium mb-1">Snacks</h4>
+                              <p>{mealPlan.Snacks}</p>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <p className="text-gray-500">No meal plan available.</p>
+                        <p className="text-foreground/70">
+                          No meals planned for this day
+                        </p>
                       )}
                     </div>
                   );
                 })}
               </div>
-            </div>
-          ) : mutation.isPending ? (
-            <div className="flex justify-center items-center h-full">
-              {/* Spinner */}
-            </div>
-          ) : (
-            <p className="text-gray-600">
-              Please generate a meal plan to see it here.
-            </p>
-          )}
+            ) : mutation.isPending ? (
+              <div className="flex flex-col items-center justify-center h-64">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p>Creating your personalized meal plan...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-foreground/70">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mb-4"
+                >
+                  <path d="M3 11v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3"></path>
+                  <path d="M12 19H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-5"></path>
+                  <path d="m9 10 2 2 4-4"></path>
+                </svg>
+                <p>Your generated meal plan will appear here</p>
+                <p className="text-sm mt-2">
+                  Fill out the form and click "Generate Meal Plan"
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

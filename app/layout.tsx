@@ -20,7 +20,7 @@ export default function RootLayout({
         <body className="bg-gray-50 text-gray-900">
           <ReactQueryClientProvider>
             <Navbar />
-            <main className="max-w-7xl mx-auto pt-16 p-4 min-h-screen">
+            <main className="max-w-7xl mx-auto pt-20 p-4 min-h-screen">
               {children}
             </main>
           </ReactQueryClientProvider>

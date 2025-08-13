@@ -18,7 +18,7 @@ export default function HomePage() {
   return (
     <div className="max-w-7xl mx-auto overflow-hidden">
       {/* Hero Section */}
-      <section className="relative h-[80vh] min-h-[600px] flex items-center bg-primary">
+      <section className="relative h-[80vh] flex items-center bg-primary rounded-4xl">
         {/* Food Pattern Decoration */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-32 h-32 rounded-full bg-background"></div>
@@ -29,7 +29,8 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative z-10 px-6 lg:px-12 py-12 max-w-3xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-background leading-tight">
-            Eat Smarter, <br className="hidden sm:block" /> Not Harder
+            Delicious Meets <br className="hidden sm:block" />
+            Effortless
           </h1>
           <p className="text-xl text-background mb-8">
             AI-powered meal plans tailored to your taste, goals, and lifestyle
