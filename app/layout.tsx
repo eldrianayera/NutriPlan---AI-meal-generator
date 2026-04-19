@@ -14,6 +14,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "NutriPlan — AI-Powered Meal Planning",
   description: "Personalized meal plans powered by AI. Eat smarter, live better.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
