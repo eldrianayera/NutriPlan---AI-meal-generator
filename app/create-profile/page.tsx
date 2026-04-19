@@ -41,5 +41,20 @@ export default function CreateProfile() {
       mutate();
     }
   }, [isLoaded, isSignedIn]);
-  return <div> Processing sign in ...</div>;
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 mx-auto mb-5 relative">
+          <div className="absolute inset-0 rounded-full border-4 border-brand-100" />
+          <div className="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 mb-2">
+          Setting up your profile…
+        </h2>
+        <p className="text-slate-500 text-sm">
+          Just a moment while we get everything ready for you.
+        </p>
+      </div>
+    </div>
+  );
 }

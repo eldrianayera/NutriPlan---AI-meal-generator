@@ -3,21 +3,30 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { availablePlans, Plan } from "@/lib/plans"; // Adjust the path based on your project structure
+import { availablePlans } from "@/lib/plans";
 import Image from "next/image";
 import { useState } from "react";
-import toast, { Toaster } from "react-hot-toast"; // Import toast
+import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import {
+  Crown,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+  Loader2,
+  Sparkles,
+  User,
+  Mail,
+} from "lucide-react";
 
 export default function ProfilePage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const queryClient = useQueryClient();
   const router = useRouter();
-
-  // State to manage selected priceId
   const [selectedPlan, setSelectedPlan] = useState<string>("");
 
-  // Fetch Subscription Details
   const {
     data: subscription,
     isLoading,
@@ -26,44 +35,30 @@ export default function ProfilePage() {
   } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
-      console.log("Fetching subscription status...");
       const res = await fetch("/api/profile/subscription-status");
-      console.log("Response status:", res.status);
       const text = await res.text();
-      console.log("Raw response text:", text);
       return JSON.parse(text);
     },
-    enabled: true, // Make sure it always runs
   });
 
-  // Adjusted Matching Logic Using priceId
   const currentPlan = availablePlans.find(
-    (plan) => plan.interval === subscription?.subscription?.subscriptionTier
+    (plan) =>
+      plan.interval === subscription?.subscription?.subscriptionTier
   );
 
-  // Mutation: Change Subscription Plan
-  const changePlanMutation = useMutation<
-    any, // Replace with actual response type if available
-    Error,
-    string // The newPriceId
-  >({
+  const changePlanMutation = useMutation<any, Error, string>({
     mutationFn: async (newPlan: string) => {
       const res = await fetch("/api/profile/change-plan", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ newPlan }),
       });
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(
-          errorData.error || "Failed to change subscription plan."
-        );
+        throw new Error(errorData.error || "Failed to change subscription plan.");
       }
       return res.json();
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Subscription plan updated successfully.");
@@ -73,23 +68,15 @@ export default function ProfilePage() {
     },
   });
 
-  // Mutation: Unsubscribe
-  const unsubscribeMutation = useMutation<
-    any, // Replace with actual response type if available
-    Error,
-    void
-  >({
+  const unsubscribeMutation = useMutation<any, Error, void>({
     mutationFn: async () => {
-      const res = await fetch("/api/profile/unsubscribe", {
-        method: "POST",
-      });
+      const res = await fetch("/api/profile/unsubscribe", { method: "POST" });
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to unsubscribe.");
       }
       return res.json();
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       router.push("/subscribe");
@@ -99,7 +86,6 @@ export default function ProfilePage() {
     },
   });
 
-  // Handler for confirming plan change
   const handleConfirmChangePlan = () => {
     if (selectedPlan) {
       changePlanMutation.mutate(selectedPlan);
@@ -107,15 +93,10 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle Change Plan Selection with Confirmation
   const handleChangePlan = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSelectedPlan = e.target.value;
-    if (newSelectedPlan) {
-      setSelectedPlan(newSelectedPlan);
-    }
+    setSelectedPlan(e.target.value);
   };
 
-  // Handle Unsubscribe Button Click
   const handleUnsubscribe = () => {
     if (
       confirm(
@@ -126,141 +107,253 @@ export default function ProfilePage() {
     }
   };
 
-  // Loading or Not Signed In States
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-emerald-100">
-        <span className="ml-2">Loading...</span>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
       </div>
     );
   }
 
   if (!isSignedIn) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-emerald-100">
-        <p>Please sign in to view your profile.</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <User className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">
+            Please sign in to view your profile.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Main Profile Page UI
+  const isActive = subscription?.subscription?.subscriptionActive;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-emerald-100 p-4">
-      <Toaster position="top-center" />{" "}
-      {/* Optional: For toast notifications */}
-      <div className="w-full max-w-5xl bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="flex flex-col md:flex-row">
-          {/* Left Panel: Profile Information */}
-          <div className="w-full md:w-1/3 p-6 bg-emerald-500 text-white flex flex-col items-center">
-            <Image
-              src={user.imageUrl || "/default-avatar.png"} // Provide a default avatar if none
-              alt="User Avatar"
-              width={100}
-              height={100}
-              className="rounded-full mb-4"
-            />
-            <h1 className="text-2xl font-bold mb-2">
-              {user.firstName} {user.lastName}
-            </h1>
-            <p className="mb-4">{user.primaryEmailAddress?.emailAddress}</p>
-            {/* Add more profile details or edit options as needed */}
+    <div className="min-h-screen bg-slate-50 py-10 px-4">
+      <Toaster position="top-center" />
+
+      <div className="max-w-5xl mx-auto">
+        {/* Page header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            My Profile
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Manage your account and subscription
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* ─── Left: User Info ─── */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Avatar card */}
+            <div className="bg-gradient-to-b from-brand-700 to-brand-900 rounded-3xl p-6 text-center shadow-xl shadow-brand-900/20">
+              <div className="relative inline-block mb-4">
+                {user.imageUrl ? (
+                  <Image
+                    src={user.imageUrl}
+                    alt="Profile"
+                    width={90}
+                    height={90}
+                    className="rounded-full ring-4 ring-white/20"
+                  />
+                ) : (
+                  <div className="w-[90px] h-[90px] rounded-full bg-gradient-to-br from-brand-300 to-brand-600 flex items-center justify-center ring-4 ring-white/20">
+                    <span className="text-3xl font-black text-white">
+                      {user.firstName?.charAt(0) || "U"}
+                    </span>
+                  </div>
+                )}
+                {isActive && (
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand-400 rounded-full flex items-center justify-center ring-2 ring-brand-800">
+                    <CheckCircle className="w-3.5 h-3.5 text-white" />
+                  </div>
+                )}
+              </div>
+              <h2 className="text-xl font-bold text-white mb-1">
+                {user.firstName} {user.lastName}
+              </h2>
+              <div className="flex items-center justify-center gap-1.5 text-brand-300 text-sm">
+                <Mail className="w-3.5 h-3.5" />
+                {user.primaryEmailAddress?.emailAddress}
+              </div>
+            </div>
+
+            {/* Status card */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-slate-500 uppercase tracking-widest text-xs">
+                  Subscription Status
+                </span>
+              </div>
+              {isLoading ? (
+                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading…
+                </div>
+              ) : isActive ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-brand-400 animate-pulse" />
+                  <span className="font-semibold text-brand-700">Active</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                  <span className="font-semibold text-slate-400">Inactive</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Right Panel: Subscription Details */}
-          <div className="w-full md:w-2/3 p-6 bg-gray-50">
-            <h2 className="text-2xl font-bold mb-6 text-emerald-700">
-              Subscription Details
-            </h2>
-
+          {/* ─── Right: Subscription Management ─── */}
+          <div className="lg:col-span-2 space-y-4">
             {isLoading ? (
-              <div className="flex items-center">
-                <span className="ml-2">Loading subscription details...</span>
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
               </div>
             ) : isError ? (
-              <p className="text-red-500">{error?.message}</p>
-            ) : subscription ? (
-              <div className="space-y-6">
-                {/* Current Subscription Info */}
-                <div className="bg-white shadow-md rounded-lg p-4 border border-emerald-200">
-                  <h3 className="text-xl font-semibold mb-2 text-emerald-600">
-                    Current Plan
-                  </h3>
-                  {currentPlan ? (
-                    <>
-                      <p>
-                        <strong>Plan:</strong> {currentPlan.name}
-                      </p>
-                      <p>
-                        <strong>Amount:</strong> ${currentPlan.amount}{" "}
-                        {currentPlan.currency}
-                      </p>
-                      <p>
-                        <strong>Status:</strong>{" "}
-                        {subscription.subscription.subscriptionActive
-                          ? "ACTIVE"
-                          : "INACTIVE"}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-red-500">Current plan not found.</p>
-                  )}
-                </div>
-
-                {/* Change Subscription Plan */}
-                <div className="bg-white shadow-md rounded-lg p-4 border border-emerald-200">
-                  <h3 className="text-xl font-semibold mb-2 text-emerald-600">
-                    Change Subscription Plan
-                  </h3>
-                  <select
-                    onChange={handleChangePlan}
-                    defaultValue={currentPlan?.interval}
-                    className="w-full px-3 py-2 border border-emerald-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    disabled={changePlanMutation.isPending}
-                  >
-                    <option value="" disabled>
-                      Select a new plan
-                    </option>
-                    {availablePlans.map((plan, key) => (
-                      <option key={key} value={plan.interval}>
-                        {plan.name} - ${plan.amount} / {plan.interval}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleConfirmChangePlan}
-                    className="mt-3 p-2 bg-emerald-500 rounded-lg text-white"
-                  >
-                    Save Change
-                  </button>
-                  {changePlanMutation.isPending && (
-                    <div className="flex items-center mt-2">
-                      <span className="ml-2">Updating plan...</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Unsubscribe */}
-                <div className="bg-white shadow-md rounded-lg p-4 border border-emerald-200">
-                  <h3 className="text-xl font-semibold mb-2 text-emerald-600">
-                    Unsubscribe
-                  </h3>
-                  <button
-                    onClick={handleUnsubscribe}
-                    disabled={unsubscribeMutation.isPending}
-                    className={`w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors ${
-                      unsubscribeMutation.isPending
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }`}
-                  >
-                    {unsubscribeMutation.isPending
-                      ? "Unsubscribing..."
-                      : "Unsubscribe"}
-                  </button>
-                </div>
+              <div className="bg-white rounded-2xl border border-red-100 p-6">
+                <p className="text-red-500 text-sm">{error?.message}</p>
               </div>
+            ) : subscription ? (
+              <>
+                {/* Current Plan */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    <h3 className="font-bold text-slate-900">Current Plan</h3>
+                  </div>
+                  <div className="p-6">
+                    {currentPlan ? (
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl font-extrabold text-slate-900">
+                              {currentPlan.name}
+                            </span>
+                            {isActive ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-brand-50 text-brand-700 text-xs font-bold rounded-full border border-brand-100">
+                                <CheckCircle className="w-3 h-3" />
+                                Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 text-slate-500 text-xs font-bold rounded-full">
+                                <XCircle className="w-3 h-3" />
+                                Inactive
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-slate-500 text-sm">
+                            ${currentPlan.amount}{" "}
+                            <span className="text-slate-400">
+                              / {currentPlan.interval}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          {currentPlan.features.map((f, i) => (
+                            <span
+                              key={i}
+                              className="px-3 py-1 bg-brand-50 text-brand-700 text-xs font-medium rounded-full border border-brand-100"
+                            >
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 text-sm italic">
+                        No active plan found.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Change Plan */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-brand-500" />
+                    <h3 className="font-bold text-slate-900">Change Plan</h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="relative mb-4">
+                      <select
+                        onChange={handleChangePlan}
+                        defaultValue={currentPlan?.interval || ""}
+                        disabled={changePlanMutation.isPending}
+                        className="w-full appearance-none pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400 disabled:opacity-50 transition"
+                      >
+                        <option value="" disabled>
+                          Select a new plan
+                        </option>
+                        {availablePlans.map((plan, i) => (
+                          <option key={i} value={plan.interval}>
+                            {plan.name} — ${plan.amount} / {plan.interval}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                    <button
+                      onClick={handleConfirmChangePlan}
+                      disabled={!selectedPlan || changePlanMutation.isPending}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-xl text-sm hover:from-brand-400 hover:to-brand-500 shadow-md shadow-brand-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      {changePlanMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Updating…
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Danger Zone */}
+                <div className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-red-100 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <h3 className="font-bold text-slate-900">Danger Zone</h3>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-slate-500 text-sm mb-4">
+                      Once you unsubscribe, you&apos;ll immediately lose access
+                      to premium features and your meal plan data.
+                    </p>
+                    <button
+                      onClick={handleUnsubscribe}
+                      disabled={unsubscribeMutation.isPending}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl text-sm shadow-md shadow-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {unsubscribeMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Unsubscribing…
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-3.5 h-3.5" />
+                          Unsubscribe
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
-              <p>You are not subscribed to any plan.</p>
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center">
+                <Crown className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                <p className="text-slate-500 text-sm">
+                  You are not subscribed to any plan.
+                </p>
+              </div>
             )}
           </div>
         </div>

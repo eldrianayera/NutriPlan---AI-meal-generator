@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ClerkProvider } from "@clerk/nextjs";
 import ReactQueryClientProvider from "@/components/react-query-client-provider";
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "NutriPlan",
-  description: "Meal Plan Generator Web App",
+  title: "NutriPlan — AI-Powered Meal Planning",
+  description: "Personalized meal plans powered by AI. Eat smarter, live better.",
 };
 
 export default function RootLayout({
@@ -16,13 +23,14 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="bg-gray-50 text-gray-900">
+      <html lang="en" className={plusJakartaSans.variable}>
+        <body
+          className="bg-white text-slate-900 antialiased"
+          style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+        >
           <ReactQueryClientProvider>
             <Navbar />
-            <main className="max-w-7xl mx-auto pt-20 p-4 min-h-screen">
-              {children}
-            </main>
+            <main className="min-h-screen pt-16">{children}</main>
           </ReactQueryClientProvider>
         </body>
       </html>
