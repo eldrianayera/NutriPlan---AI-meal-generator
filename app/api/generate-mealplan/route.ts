@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1", // Ensure this is the correct baseURL for your API
-  apiKey: process.env.OPEN_ROUTER_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function POST(request: Request) {
@@ -52,15 +52,13 @@ export async function POST(request: Request) {
 
     // Send the prompt to the AI model
     const response = await openai.chat.completions.create({
-      model: "meta-llama/llama-3.2-3b-instruct:free", // Ensure this model is accessible and suitable
+      model: "llama-3.1-8b-instant",
       messages: [
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.7, // Adjust for creativity vs. consistency
-      max_tokens: 1500, // Adjust based on expected response length
     });
 
     // Extract the AI's response
@@ -76,7 +74,7 @@ export async function POST(request: Request) {
       // If parsing fails, return the raw text with an error message
       return NextResponse.json(
         { error: "Failed to parse meal plan. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -89,12 +87,11 @@ export async function POST(request: Request) {
 
     // Return the parsed meal plan
     return NextResponse.json({ mealPlan: parsedMealPlan });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating meal plan:", error);
-    return NextResponse.json(
-      { error: "Failed to generate meal plan. Please try again later." },
-      { status: 500 }
-    );
+    const message =
+      error?.message || "Failed to generate meal plan. Please try again later.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
