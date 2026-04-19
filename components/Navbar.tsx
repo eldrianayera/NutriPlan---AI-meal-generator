@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useUser, SignedIn, SignedOut, SignOutButton } from "@clerk/nextjs";
+import { useUser, SignOutButton } from "@clerk/nextjs";
 import { Leaf, LogOut, UtensilsCrossed } from "lucide-react";
 
 export default function NavBar() {
@@ -29,7 +29,7 @@ export default function NavBar() {
 
         {/* Nav Links */}
         <div className="flex items-center gap-2">
-          <SignedIn>
+          {isSignedIn && (<>
             <Link
               href="/mealplan"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-600 hover:text-brand-600 hover:bg-brand-50 font-medium text-sm transition-all"
@@ -65,9 +65,9 @@ export default function NavBar() {
                 </button>
               </SignOutButton>
             </div>
-          </SignedIn>
+          </>)}
 
-          <SignedOut>
+          {!isSignedIn && (<>
             <Link
               href="/"
               className="px-3 py-2 rounded-lg text-slate-600 hover:text-brand-600 hover:bg-brand-50 font-medium text-sm transition-all"
@@ -86,7 +86,7 @@ export default function NavBar() {
             >
               Get Started
             </Link>
-          </SignedOut>
+          </>)}
         </div>
       </div>
     </nav>
